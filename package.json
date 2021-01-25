@@ -1,0 +1,31 @@
+{
+  "type": "module",
+  "name": "gerbil-cnc",
+  "version": "0.0.2",
+  "description": "almost independent grbl driver",
+  "main": "main.js",
+  "scripts": {
+    "test": "node example.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/errantspark/gerbil-cnc.git"
+  },
+  "keywords": [
+    "grbl",
+    "cnc",
+    "gcode"
+  ],
+  "author": "errantspark",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/errantspark/gerbil-cnc/issues"
+  },
+  "homepage": "https://github.com/errantspark/gerbil-cnc#readme",
+  "dependencies": {
+    "serialport": "^9.0.6"
+  },
+  "devDependencies": {
+    "minami": "^1.2.3"
+  }
+}
