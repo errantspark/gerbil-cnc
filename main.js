@@ -2,6 +2,13 @@ import SerialPort from 'serialport'
 import {Writable} from 'stream'
 import errors from './errors.js'
 
+const emptyPromise = () => {
+  let res
+  let promise = new Promise(_res => (res = _res))
+  promise.resolve = (...args) => (res(args), promise.done = true)
+  return promise
+}
+
 /** @namespace gerbil */
 
 /**
@@ -28,6 +35,7 @@ let main = (ttyPath, options) => {
 
   let handleDisconnect = () => {
     status = {connected: false}
+    if (gerbil.machineReady.done) gerbil.machineReady = emptyPromise()
   }
 
   /**
@@ -305,7 +313,9 @@ let main = (ttyPath, options) => {
   router.every('version', line => {
     status.version = line.match(/ [\d,\.]+\w+ /gim)?.[0].trim()
     gerbil.onMachineReady?.(status)
+    gerbil.machineReady?.resolve(status)
   })
+
 
   let connect = ttyPath => new Promise(res =>  {
     port = new SerialPort(ttyPath, { baudRate: 115200 }, e => {
@@ -330,10 +340,22 @@ let main = (ttyPath, options) => {
   })
   */
 
-
   connect(ttyPath)
 
   let gerbil = {
+    /**
+     * A promise that resolves when the machine is ready, works similarly to
+     * {@link gerbil.onMachineReady}.
+     * @type {Promise}
+     * 
+     * @example 
+     * let ready = await gerbil.machineReady
+     * console.log(ready)
+     * > {connected: true, version: '1.1h', ttyPath: '/dev/ttyACM0'}
+     *
+     * @memberOf gerbil
+     */
+    machineReady: emptyPromise(),
     /**
      * Set callback to execute when GRBL trasmits it's version string. This 
      * happens on initial connection or reset. The callback is passed the status
