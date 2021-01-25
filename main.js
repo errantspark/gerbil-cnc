@@ -6,7 +6,7 @@ import errors from './errors.js'
 
 /**
  * this is the gerbil module
- * @module Gerbil
+ * @module gerbil-cnc
  * @function
  * @arg {string} ttyPath path to serial port
  * @arg {object} options currently unused
@@ -14,11 +14,11 @@ import errors from './errors.js'
  * ```
  * {autoReconnect: false}
  * ```
- * @exports module:Gerbil
+ * @exports module:gerbil-cnc
  * @returns {gerbil} 
  * @public
  */
-let Gerbil = (ttyPath, options) => {
+let main = (ttyPath, options) => {
 
   let retry, port, parser
 
@@ -381,4 +381,4 @@ let Gerbil = (ttyPath, options) => {
   return gerbil
 }
 
-export default Gerbil
+export default main
