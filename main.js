@@ -65,7 +65,7 @@ let main = (ttyPath, options) => {
    * ```
    *
    */
-  let getStatus = () => new Promise (res => {
+  let machineStatus = () => new Promise (res => {
     writeRaw('?')
     let parseStatus = line => 
       res(
@@ -384,11 +384,11 @@ let main = (ttyPath, options) => {
     onEveryLine:undefined,
     writeLine,
     writeRaw,
-    getStatus,
+    machineStatus,
     stream,
     /**
      * @memberOf gerbil
-     * @returns {Status} immediately returns the inner status object
+     * @returns {object} immediately returns the inner status object
      * ```js
      * {
      *   connected: true, //always present, true if serialport link established
@@ -397,7 +397,7 @@ let main = (ttyPath, options) => {
      * }
      * ```
      */
-    status : () => ({status})
+    driverStatus : () => ({status})
   }
 
   return gerbil

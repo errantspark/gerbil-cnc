@@ -1,7 +1,7 @@
 # gerbil-cnc
 almost independent grbl driver for node
 
-[docs](https://errantspark.github.io/gerbil-cnc/) | [repo](https://github.com/errantspark/gerbil-cnc/)
+[docs](https://errantspark.github.io/gerbil-cnc/) | [repo](https://github.com/errantspark/gerbil-cnc/)| [npm](https://www.npmjs.com/package/gerbil-cnc)
 
 ### Basic Usage
 

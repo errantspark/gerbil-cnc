@@ -30,7 +30,7 @@ process.stdin.on('data',async d => {
     let message = d.toString()
     switch (message) {
       case '?\n':
-        let status = await gerbil.getStatus()
+        let status = await gerbil.machineStatus()
         console.log(status)
         break
       default:
