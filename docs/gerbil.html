@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-gerbil-cnc.html">gerbil-cnc</a></span></li><li class="nav-heading">Namespaces</li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.html">gerbil</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.driverStatus">driverStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.getSettings">getSettings</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.machineStatus">machineStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeLine">writeLine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeRaw">writeRaw</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-gerbil-cnc.html">gerbil-cnc</a></span></li><li class="nav-heading">Namespaces</li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.html">gerbil</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.driverStatus">driverStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeLine">writeLine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeRaw">writeRaw</a></span></li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.cmds.html">cmds</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.cmds.html#.machineStatus">machineStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.cmds.html#.settings">settings</a></span></li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.stream.html">stream</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.stream.html#.write">write</a></span></li>
 </nav>
 
 <div id="main">
@@ -51,6 +51,8 @@
 <article>
     <div class="container-overview">
     
+        
+            <div class="description"><p>Methods and properties available on an instantiated <code>gerbil</code> object.</p></div>
         
 
         
@@ -110,6 +112,16 @@
      
 
     
+        <h3 class="subsection-title">Namespaces</h3>
+
+        <dl>
+            <dt><a href="gerbil.cmds.html">cmds</a></dt>
+            <dd></dd>
+        
+            <dt><a href="gerbil.stream.html">stream</a></dt>
+            <dd></dd>
+        </dl>
+    
 
     
         <h3 class="subsection-title">Members</h3>
@@ -124,7 +136,9 @@
 
 <div class="description">
     <p>A promise that resolves when the machine is ready, works similarly to
-<a href="gerbil.html#.onMachineReady"><code>gerbil.onMachineReady</code></a>.</p>
+<a href="gerbil.html#.onMachineReady"><code>gerbil.onMachineReady</code></a>. If the machine is in a ready state and
+subsequently becomes unready this value is overwritten with a new promise
+that resolves the next time the machine is ready.</p>
 </div>
 
 
@@ -160,7 +174,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line358">line 358</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line346">line 346</a>
     </li></ul></dd>
     
 
@@ -206,8 +220,8 @@ console.log(ready)
 
 <div class="description">
     <p>Set callback to execute on every line received from the serialport.
-This is called with the non-delimited string each time GRBL spits out a
-new line.</p>
+This is called with the trimmed string (no trailing newline) each time
+Grbl spits out a new line.</p>
 </div>
 
 
@@ -243,7 +257,7 @@ new line.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line384">line 384</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line418">line 418</a>
     </li></ul></dd>
     
 
@@ -316,7 +330,7 @@ object.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line370">line 370</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line358">line 358</a>
     </li></ul></dd>
     
 
@@ -392,7 +406,7 @@ object.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line400">line 400</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line471">line 471</a>
     </li></ul></dd>
     
 
@@ -463,235 +477,6 @@ object.</p>
 
     
 
-    <h4 class="name" id=".getSettings"><span class="type-signature">(static) </span>getSettings<span class="signature">()</span><span class="type-signature"> &rarr; {promise(object)}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Returns GRBL machine settings as an object.</p>
-</div>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line129">line 129</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div class="section-returns">
-<h5>Returns:</h5>
-
-        
-
-<dl class="param-type">
-    <dt>
-        Type:
-    </dt>
-    <dd>
-        
-<span class="param-type"><code>promise(object)</code></span>
-
-
-    </dd>
-</dl>
-
-
-<div class="param-desc">
-    <pre class="prettyprint source lang-js"><code>{
-  '$0': '10',
-  '$1': '25',
-  '$2': '0',
-  '$3': '4',
-  '$4': '0',
-  ...
-}
-</code></pre>
-</div>
-
-    
-</div>
-
-
-
-</div>
-        
-            
-<div class="section-method">
-
-    
-
-    <h4 class="name" id=".machineStatus"><span class="type-signature">(static) </span>machineStatus<span class="signature">()</span><span class="type-signature"> &rarr; {promise(object)}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>A promise returning the current machine status, uses GRBL's <code>?</code> command
-under the hood. Not all parameters are guaranteed to be present.</p>
-</div>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line68">line 68</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div class="section-returns">
-<h5>Returns:</h5>
-
-        
-
-<dl class="param-type">
-    <dt>
-        Type:
-    </dt>
-    <dd>
-        
-<span class="param-type"><code>promise(object)</code></span>
-
-
-    </dd>
-</dl>
-
-
-<div class="param-desc">
-    <p>current machine status as object</p>
-<pre class="prettyprint source lang-js"><code>{
-   Buffer: {planner:15, rx: 128}
-}
-</code></pre>
-</div>
-
-    
-</div>
-
-
-
-</div>
-        
-            
-<div class="section-method">
-
-    
-
     <h4 class="name" id=".writeLine"><span class="type-signature">(static) </span>writeLine<span class="signature">(message)</span><span class="type-signature"> &rarr; {Promise(string)|Promise(errorObj)}</span></h4>
 
     
@@ -699,10 +484,11 @@ under the hood. Not all parameters are guaranteed to be present.</p>
 
 
 <div class="description">
-    <p>write a single line to GRBL, this will throw if you try to use it to send
+    <p>write a single line to Grbl, this will throw if you try to use it to send
 multiple lines, or a line longer than 128 bytes, returns a Promise that
-resolves to be either a string containing any output GRBL sent between invocation
-and the first <code>ok</code> (inclusive)</p>
+resolves to be either a string containing any output Grbl sent between invocation
+and the first <code>ok</code> (inclusive). Makes sure that whatever you sent is terminated
+with a newline.</p>
 <pre class="prettyprint source"><code>writeLine('$I').then(console.log)
 
 > [VER:1.1h.20190724:]
@@ -750,7 +536,7 @@ and the first <code>ok</code> (inclusive)</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line168">line 168</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line446">line 446</a>
     </li></ul></dd>
     
 
@@ -811,7 +597,7 @@ and the first <code>ok</code> (inclusive)</p>
             
 
             <td class="description last">
-                <p>a line to send to GRBL</p>
+                <p>a line to send to Grbl</p>
                 
             </td>
         </tr>
@@ -855,7 +641,7 @@ and the first <code>ok</code> (inclusive)</p>
 
 
 <div class="param-desc">
-    <p>GRBL data until <code>ok</code></p>
+    <p>Grbl data until <code>ok</code></p>
 </div>
 
     
@@ -877,7 +663,7 @@ and the first <code>ok</code> (inclusive)</p>
 
 
 <div class="description">
-    <p>Write raw data to GRBL, can be a buffer or a string and is not validated
+    <p>Write raw data to Grbl, can be a buffer or a string and is not validated
 in any way. This is for internal use and probably shouldn't be used
 externally unless you're just using this and <a href="gerbil.html#.onEveryLine"><code>gerbil.onEveryLine</code></a></p>
 </div>
@@ -915,7 +701,7 @@ externally unless you're just using this and <a href="gerbil.html#.onEveryLine">
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line50">line 50</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line457">line 457</a>
     </li></ul></dd>
     
 
@@ -1043,7 +829,7 @@ externally unless you're just using this and <a href="gerbil.html#.onEveryLine">
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Mon Jan 25 2021 20:07:14 GMT-0800 (Pacific Standard Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Tue Jan 26 2021 19:19:34 GMT-0800 (Pacific Standard Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

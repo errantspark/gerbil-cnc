@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-gerbil-cnc.html">gerbil-cnc</a></span></li><li class="nav-heading">Namespaces</li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.html">gerbil</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.driverStatus">driverStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.getSettings">getSettings</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.machineStatus">machineStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeLine">writeLine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeRaw">writeRaw</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-gerbil-cnc.html">gerbil-cnc</a></span></li><li class="nav-heading">Namespaces</li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.html">gerbil</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.driverStatus">driverStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeLine">writeLine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.html#.writeRaw">writeRaw</a></span></li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.cmds.html">cmds</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.cmds.html#.machineStatus">machineStatus</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.cmds.html#.settings">settings</a></span></li><li class="nav-heading"><span class="nav-item-type type-namespace">N</span><span class="nav-item-name"><a href="gerbil.stream.html">stream</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="gerbil.stream.html#.write">write</a></span></li>
 </nav>
 
 <div id="main">
@@ -51,6 +51,7 @@
         <article><h1>gerbil-cnc</h1>
 <p>almost independent grbl driver for node</p>
 <p><a href="https://errantspark.github.io/gerbil-cnc/">docs</a> | <a href="https://github.com/errantspark/gerbil-cnc/">repo</a>| <a href="https://www.npmjs.com/package/gerbil-cnc">npm</a></p>
+<p>I wouldn't use this right now because the API is going to be super duper unstable for the next few weeks at least.</p>
 <h3>Basic Usage</h3>
 <p>Install via npm <code>npm i gerbil-cnc</code>, probably won't work with older nodes cause
 I tend to use a lot of ES6 type stuff.</p>
@@ -58,12 +59,21 @@ I tend to use a lot of ES6 type stuff.</p>
 
 let gerbil = gerbilCnc('/dev/ttyACM0')
 
-gerbil.onMachineReady = () => gerbil.writeLine('$I').then(console.log)
+gerbil.machineReady.then(() => gerbil.writeLine('$I')).then(console.log)
 </code></pre>
 <pre class="prettyprint source"><code>> [VER:1.1h.20190724:]
   [OPT:VC,15,128]
   ok
-</code></pre></article>
+</code></pre>
+<h3>Info</h3>
+<p><code>gerbil-cnc</code> aims to be a fully featured, batteries-included driver for <a href="https://github.com/gnea/grbl">Grbl</a>.
+Once instantiated most of the magic happens in the <a href="https://errantspark.github.io/gerbil-cnc/gerbil.cmds.html"><code>cmds</code></a> namespace, which provides a high level promise-based api for directly calling many of Grbl's functions; and <a href="https://errantspark.github.io/gerbil-cnc/gerbil.stream.html"><code>stream</code></a> streaming interface using the Grbl <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Interface#streaming-protocol-character-counting-recommended-with-reservation">character counting</a> protocol.</p>
+<p>Once instantiated <code>gerbil-cnc</code> will provide all relevant functions and endpoints regardless of the status of the physical hardware.
+They will simply throw errors if you attempt to use them.
+<code>gerbil-cnc</code> will also attempt to reconnect every second by default if the serial link drops. Configurable using the <a href="https://errantspark.github.io/gerbil-cnc/module-gerbil-cnc.html"><code>autoReconnect</code></a> property in options.</p>
+<p>The functions directly in the instantiated <code>gerbil</code> namespace are mostly for internal use but are exported anyway for when you just need to get something done and want to pay the price later.</p>
+<p>Notably we have <a href="https://errantspark.github.io/gerbil-cnc/gerbil.html#.writeRaw"><code>writeRaw</code></a> and <a href="https://errantspark.github.io/gerbil-cnc/gerbil.html#.writeRaw"><code>onEveryLine</code></a> which are essentially thin shims over <code>serialport.write()</code> and <code>serialport.on('data', ...)</code>. You can use these to do whatever the fuck you want, but beware that the higher level api assumes you're not simultaneously using <code>writeRaw</code> and if you do it might cause wonky things to happen.</p>
+<p>I only test against Grbl 1.1h but most things should be compatible with older versions, and the lower level API will probably work with things that aren't Grbl at all since it's just a thin wrapper over <code>serialport</code></p></article>
     </section>
 
 
@@ -76,7 +86,7 @@ gerbil.onMachineReady = () => gerbil.writeLine('$I').then(console.log)
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Mon Jan 25 2021 20:07:14 GMT-0800 (Pacific Standard Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Tue Jan 26 2021 19:19:34 GMT-0800 (Pacific Standard Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

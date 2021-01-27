@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>gerbil-cnc - Documentation</title>
+    <title>cmds - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">gerbil-cnc</h1>
+    <h1 class="page-title">cmds</h1>
     
 
     
@@ -41,8 +41,11 @@
 
 <header>
     
+        <h2>
+            <span class="ancestors"><a href="gerbil.html">gerbil</a>.</span>
         
-            
+        cmds
+        </h2>
         
     
 </header>
@@ -51,14 +54,86 @@
     <div class="container-overview">
     
         
-            <div class="description"><p>this is the gerbil module</p></div>
+
         
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line359">line 359</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
 
         
             
 <div class="section-method">
 
+    
 
+    <h4 class="name" id=".machineStatus"><span class="type-signature">(static) </span>machineStatus<span class="signature">()</span><span class="type-signature"> &rarr; {promise(object)}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Retrieve the current machine status using <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Interface#real-time-status-reports"><code>?</code></a>.
+Not all values are guaranteed to be present.</p>
+</div>
 
 
 
@@ -93,7 +168,123 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="main.js.html">main.js</a>, <a href="main.js.html#line16">line 16</a>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line404">line 404</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+<dl class="param-type">
+    <dt>
+        Type:
+    </dt>
+    <dd>
+        
+<span class="param-type"><code>promise(object)</code></span>
+
+
+    </dd>
+</dl>
+
+
+<div class="param-desc">
+    <p>current machine status as object</p>
+<pre class="prettyprint source lang-js"><code>{
+  Status: 'Idle',
+  MPos: { x: 0, y: 0, z: 0 },
+  Buffer: { planner: 15, rx: 128 },
+  Speeds: { feed: 0, spindle: 0 }
+}
+</code></pre>
+</div>
+
+    
+</div>
+
+
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id=".settings"><span class="type-signature">(static) </span>settings<span class="signature">(settings<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {promise(object)}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Wraps Grbl's <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#grbl-settings"><code>$$</code> and <code>$x=val</code></a> commands, used to retrieve and configure machine settings.
+Call without any arguments to retrieve current settings as an object. Call with an object in the same format to set settings. See example for more details.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="main.js.html">main.js</a>, <a href="main.js.html#line386">line 386</a>
     </li></ul></dd>
     
 
@@ -139,41 +330,7 @@
 
         <tr>
             
-                <td class="name"><code>ttyPath</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><code>string</code></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">
-                <p>path to serial port</p>
-                
-            </td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
+                <td class="name"><code>settings</code></td>
             
 
             <td class="type">
@@ -200,82 +357,7 @@
             
 
             <td class="description last">
-                <p>sets up instance options, this is optional</p>
                 
-                    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>autoReconnect</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><code>boolean</code></span>
-|
-
-<span class="param-type"><code>number</code></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    1000
-                
-                </td>
-            
-
-            <td class="description last">
-                <p>reconnection interval,
-if falsy then reconnection isn't attempted on drop.</p>
-                
-            </td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
                 
             </td>
         </tr>
@@ -308,7 +390,7 @@ if falsy then reconnection isn't attempted on drop.</p>
     </dt>
     <dd>
         
-<span class="param-type"><code><a href="gerbil.html">gerbil</a></code></span>
+<span class="param-type"><code>promise(object)</code></span>
 
 
     </dd>
@@ -320,23 +402,28 @@ if falsy then reconnection isn't attempted on drop.</p>
 
 
 
+<div class="section-examples">
+<h5>Example</h5>
+
+    <pre class="prettyprint"><code>//set pulse width to 10μs
+gerbil.cmds.settings({'$0': '10'})
+
+//retrieve settings
+gerbil.cmds.settings().then(console.log)
+
+> {
+  '$0': '10',
+  '$1': '25',
+  '$2': '0',
+  '$3': '4',
+  '$4': '0',
+  ...
+}</code></pre>
+
+</div>
+
 </div>
         
-    
-    </div>
-
-    
-
-    
-
-    
-
-     
-
-    
-
-    
-
     
 
     

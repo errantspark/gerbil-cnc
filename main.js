@@ -9,25 +9,31 @@ const emptyPromise = () => {
   return promise
 }
 
-/** @namespace gerbil */
+/**
+ * Methods and properties available on an instantiated `gerbil` object.
+ * @namespace gerbil */
 
 /**
  * this is the gerbil module
  * @module gerbil-cnc
  * @function
  * @arg {string} ttyPath path to serial port
- * @arg {object} options currently unused
- * @arg {boolean} options.autoReconnect
- * ```
- * {autoReconnect: false}
- * ```
+ * @arg {object} [options] sets up instance options, this is optional
+ * @arg {boolean|number} [options.autoReconnect=1000] reconnection interval, 
+ * if falsy then reconnection isn't attempted on drop.
+ *
  * @exports module:gerbil-cnc
  * @returns {gerbil} 
  * @public
  */
-let main = (ttyPath, options) => {
+let main = (
+  ttyPath, 
+  {autoReconnect} = {
+    autoReconnect: 1000
+  } 
+) => {
 
-  let retry, port, parser
+  let retry, port, parser, busy
 
   let status = {
     connected: false
@@ -38,35 +44,12 @@ let main = (ttyPath, options) => {
     if (gerbil.machineReady.done) gerbil.machineReady = emptyPromise()
   }
 
-  /**
-   * Write raw data to GRBL, can be a buffer or a string and is not validated
-   * in any way. This is for internal use and probably shouldn't be used 
-   * externally unless you're just using this and {@link gerbil.onEveryLine}
-   * 
-   * @arg {string|buffer} data
-   * @memberOf gerbil
-   * @return {void} 
-   */
   let writeRaw = data => {
     if (!(status.connected && status.version)) throw new Error('machine disconnected')
     port.write(data)
   }
-``
-  /**
-   * A promise returning the current machine status, uses GRBL's `?` command
-   * under the hood. Not all parameters are guaranteed to be present.
-   *
-   * @memberOf gerbil
-   * @return {promise(object)} current machine status as object
-   * ```js
-   * {
-   *    Buffer: {planner:15, rx: 128}
-   * }
-   * ```
-   *
-   */
+
   let machineStatus = () => new Promise (res => {
-    writeRaw('?')
     let parseStatus = line => 
       res(
         Object.fromEntries(
@@ -106,70 +89,54 @@ let main = (ttyPath, options) => {
             return [key, values]
           }))
       )
+    writeRaw('?')
     router.next('status', parseStatus)
   })
 
-  /**
-   * Returns GRBL machine settings as an object.
-   *
-   * @memberOf gerbil
-   * @return {promise(object)} 
-   * ```js
-   * {
-   *   '$0': '10',
-   *   '$1': '25',
-   *   '$2': '0',
-   *   '$3': '4',
-   *   '$4': '0',
-   *   ...
-   * }
-   * ```
-   *
-   */
-  let getSettings = () => new Promise (res => {
-    writeRaw('$$\n')
-    let settings = {}
-    let getSettings = (setting, unbind) => {
-      let [key, value] = setting.split('=')
-      settings[key] = value.trim()
-      if (setting.slice(0,4) === '$132') {
-        unbind()
-        res(settings)
+  let settings = _settings => new Promise (async res => {
+    let {Status} = await gerbil.cmds.machineStatus()
+    if (Status !== 'Idle') throw new Error('$ commands cannot be sent unless Grbl is IDLE')
+    if (_settings === undefined){
+      let settings = {}
+      let getSettings = (setting, unbind) => {
+        let [key, value] = setting.split('=')
+        settings[key] = value.trim()
+        if (setting.slice(0,4) === '$132') {
+          unbind()
+          res(settings)
+        }
       }
+      writeRaw('$$\n')
+      router.every('setting',getSettings)
+    } else {
+      let entries = Object.entries(_settings)
+      //basic sanity check
+      entries.forEach(([key]) => {
+        if (!key.match(/^\$\d+$/)) throw new Error(`invalid setting: ${key}`)
+      })
+
+      let length = entries.length
+      let message = entries.map(([key,value]) => `${key}=${value}\n`).join('')
+
+      let getOk = (ok, unbind) => {
+        length--
+        if (length < 1){
+          unbind()
+          res()
+        }
+      }
+      writeRaw(message)
+      router.every('ok',getOk)
     }
-    router.every('setting',getSettings)
   })
 
-  /**
-   * write a single line to GRBL, this will throw if you try to use it to send
-   * multiple lines, or a line longer than 128 bytes, returns a Promise that
-   * resolves to be either a string containing any output GRBL sent between invocation
-   * and the first `ok` (inclusive)
-   *
-   * ```
-   * writeLine('$I').then(console.log)
-   *
-   * > [VER:1.1h.20190724:]
-   *   [OPT:VC,15,128]
-   *   ok
-   * ```
-   * or an error object looking something like this:
-   * ```js
-   * {
-   *   error: "error:2"
-   *   message: "Numeric value format is not valid or missing an expected value."
-   * }
-   * ```
-   *
-   * @arg {string} message a line to send to GRBL
-   * @memberOf gerbil
-   * @return {Promise(string)|Promise(errorObj)} GRBL data until `ok`
-   */
   let writeLine = message => new Promise (res => {
     if (message.split('\n').filter(a=>a).length > 1) 
       throw new Error('writeLine interface is only meant for single-line messages')
     if (message.length > 127) 
       throw new Error(`message larger than GRBL buffer (128btyes), ignored\nmsg: ${message}`)
+    if (!message[message.length-1].match(/\n|\r/))
+      message += '\n'
     let data = ''
     let unbindGather = router.every('any', val => data += val+'\n')
     let finalize = ok => {
@@ -180,45 +147,41 @@ let main = (ttyPath, options) => {
         res({error: ok, message: errors[ok]})
       }
     }
-    router.next('ok', finalize)
-    router.next('error', finalize)
+    router.next('response', finalize)
     writeRaw(message)
   })
 
   let stream = (() => {
-    const PLANNER = 14 //something is dumb, this should be 15
+    let corked = false
     const RX = 126 //126 because i always want to have space for a ?
     //this may not be necessary? not sure if ? goes into the buffer
     let streaming = false
     let currentRx = [] 
-    let currentPlan = 0
     let buffer = []
     let onData = (data,unbind) => {
-        currentRx.shift()
-        currentPlan--
-        processBuffer()
-        if (currentPlan === 0) {
-          unbind()
-          streaming = false
-        }
+      currentRx.shift()
+      processBuffer()
+      if (currentPlan === 0) {
+        unbind()
+        streaming = false
+      }
     }
 
-    let toSend = ''
-
     let processBuffer = () => {
+      let toSend = ''
       while (
+        !corked &&
+        //buffer has things in it
         buffer.length > 0 && 
-        (currentPlan+1 < PLANNER) && 
-        (currentRx.reduce((a,b)=>a+b,0)+buffer[0].length < RX)
+        //and the buffer doesn't have more than 128 characters in it
+        (currentRx.reduce((a,b)=>a+b.length,0)+buffer[0].length < RX)
       ) {
         let command = buffer.shift()
-        currentPlan += 1 
-        currentRx.push(command.length)
-        toSend += command+'\n'
+        currentRx.push(command)
+        toSend += command
       }
       if (toSend) {
         writeRaw(toSend)
-        toSend = ''
       }
     }
 
@@ -227,7 +190,7 @@ let main = (ttyPath, options) => {
         streaming = true
         router.every('ok', onData)
       }
-      let commands = string.split('\n').map(s => s.trim()).filter(a=>a)
+      let commands = string.split('\n').map(s => s.trim()).filter(a=>a).map(a=>a+'\n')
       commands.forEach(command => buffer.push(command))
       processBuffer()
     }
@@ -240,14 +203,33 @@ let main = (ttyPath, options) => {
       return {
         buffer: buffer.map(v=>v),
         buffered: buffer.length,
-        rxBuffered: currentRx.reduce((a,b)=>a+b,0),
-        planned: currentPlan,
+        rxBuffered: currentRx.reduce((a,b)=>a+b.length,0),
+        machineBuffer: currentRx.map(v=>v),
         streaming
       }
     }
-    return {write, status, cancel}
+    /** 
+     * This is an implemementation of Grbl's character-counting stream method.
+     * @namespace gerbil.stream 
+     */
+    let stream = {
+      cork: _=>corked = true,
+      uncork: _=>(corked = false,processBuffer()),
+      /**
+       * Write to Grbl using the character-counting stream method. In practice
+       * this is the correct way to send gcode.
+       * @func
+       * @arg {string} string
+       * @returns {void}
+       *
+       * @memberof gerbil.stream
+       */
+      write, 
+      status, 
+      cancel
+    }
+    return stream
   })()
-
 
   let router = (() => {
     let listeners = {
@@ -257,6 +239,7 @@ let main = (ttyPath, options) => {
       status: new Set(),
       setting: new Set(),
       error: new Set(),
+      response: new Set(),
     }
 
     let lineType = line => {
@@ -277,9 +260,11 @@ let main = (ttyPath, options) => {
         while ((position = data.indexOf('\n')) !== -1) {
           let line = data.slice(0,position-1).toString()
           let type = lineType(line)
+          let response = type === 'ok' || type === 'error'
           gerbil.onEveryLine?.(line)
           listeners.any?.forEach(fn => fn(line))
           listeners[type]?.forEach(fn => fn(line))
+          if (response) listeners.response?.forEach(fn => fn(line))
           data = data.slice(position+1)
         }
         buffer = data
@@ -316,14 +301,15 @@ let main = (ttyPath, options) => {
     gerbil.machineReady?.resolve(status)
   })
 
-
   let connect = ttyPath => new Promise(res =>  {
     port = new SerialPort(ttyPath, { baudRate: 115200 }, e => {
       if (e) {
         handleDisconnect()
-        retry = setTimeout(() => {
-          connect(ttyPath)
-        }, 1000)
+        if (autoReconnect) {
+          retry = setTimeout(() => {
+            connect(ttyPath)
+          }, autoReconnect)
+        }
       } else {
         status.connected = true
         status.tty = ttyPath
@@ -338,14 +324,16 @@ let main = (ttyPath, options) => {
     clearTimeout(retry)
     port.cose(res)
   })
-  */
+    */
 
-  connect(ttyPath)
+    connect(ttyPath)
 
   let gerbil = {
     /**
      * A promise that resolves when the machine is ready, works similarly to
-     * {@link gerbil.onMachineReady}.
+     * {@link gerbil.onMachineReady}. If the machine is in a ready state and
+     * subsequently becomes unready this value is overwritten with a new promise
+     * that resolves the next time the machine is ready.
      * @type {Promise}
      * 
      * @example 
@@ -368,11 +356,57 @@ let main = (ttyPath, options) => {
      * @memberOf gerbil
      */
     onMachineReady:undefined,
-    getSettings,
+    /** @namespace gerbil.cmds */
+    cmds: {
+      /**
+       * Wraps Grbl's [`$$$$` and `$x=val`]{@link https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#grbl-settings} commands, used to retrieve and configure machine settings.
+       * Call without any arguments to retrieve current settings as an object. Call with an object in the same format to set settings. See example for more details.
+       *
+       * @example
+       * //set pulse width to 10μs
+       * gerbil.cmds.settings({'$0': '10'})
+       *
+       * //retrieve settings
+       * gerbil.cmds.settings().then(console.log)
+       *
+       * > {
+       *   '$0': '10',
+       *   '$1': '25',
+       *   '$2': '0',
+       *   '$3': '4',
+       *   '$4': '0',
+       *   ...
+       * }
+       *
+       * @func
+       * @arg {object} [settings]
+       * @return {promise(object)} 
+       * @memberOf gerbil.cmds
+       */
+      settings,
+      /**
+       * Retrieve the current machine status using [`?`]{@link https://github.com/gnea/grbl/wiki/Grbl-v1.1-Interface#real-time-status-reports}.
+       * Not all values are guaranteed to be present.
+       *
+       * @memberOf gerbil.cmds
+       * @return {promise(object)} current machine status as object
+       * ```js
+       * {
+       *   Status: 'Idle',
+       *   MPos: { x: 0, y: 0, z: 0 },
+       *   Buffer: { planner: 15, rx: 128 },
+       *   Speeds: { feed: 0, spindle: 0 }
+       * }
+       * ```
+       * @func
+       *
+      */
+      machineStatus,
+    },
     /**
      * Set callback to execute on every line received from the serialport.
-     * This is called with the non-delimited string each time GRBL spits out a
-     * new line.
+     * This is called with the trimmed string (no trailing newline) each time 
+     * Grbl spits out a new line.
      *
      * @example 
      * gerbil.onEveryLine = console.log
@@ -382,9 +416,45 @@ let main = (ttyPath, options) => {
      * @memberOf gerbil
      */
     onEveryLine:undefined,
+    /**
+     * write a single line to Grbl, this will throw if you try to use it to send
+     * multiple lines, or a line longer than 128 bytes, returns a Promise that
+     * resolves to be either a string containing any output Grbl sent between invocation
+     * and the first `ok` (inclusive). Makes sure that whatever you sent is terminated
+     * with a newline.
+     *
+     * ```
+     * writeLine('$I').then(console.log)
+     *
+     * > [VER:1.1h.20190724:]
+     *   [OPT:VC,15,128]
+     *   ok
+     * ```
+     * or an error object looking something like this:
+     * ```js
+     * {
+     *   error: "error:2"
+     *   message: "Numeric value format is not valid or missing an expected value."
+     * }
+     * ```
+     *
+     * @arg {string} message a line to send to Grbl
+     * @memberOf gerbil
+     * @return {Promise(string)|Promise(errorObj)} Grbl data until `ok`
+     * @func
+     */
     writeLine,
+    /**
+     * Write raw data to Grbl, can be a buffer or a string and is not validated
+     * in any way. This is for internal use and probably shouldn't be used 
+     * externally unless you're just using this and {@link gerbil.onEveryLine}
+     * 
+     * @arg {string|buffer} data
+     * @memberOf gerbil
+     * @return {void} 
+     * @func
+     */
     writeRaw,
-    machineStatus,
     stream,
     /**
      * @memberOf gerbil
@@ -396,7 +466,8 @@ let main = (ttyPath, options) => {
      *   version: '1.1h', //GRBL version, present once initial handshake received
      * }
      * ```
-     */
+     * @func
+    */
     driverStatus : () => ({status})
   }
 
