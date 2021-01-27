@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "gerbil-cnc",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "almost independent grbl driver",
   "main": "main.js",
   "scripts": {

@@ -161,7 +161,7 @@ let main = (
     let onData = (data,unbind) => {
       currentRx.shift()
       processBuffer()
-      if (currentPlan === 0) {
+      if (currentRx.length === 0 && buffer.length === 0) {
         unbind()
         streaming = false
       }
@@ -195,8 +195,10 @@ let main = (
       processBuffer()
     }
 
-    let cancel = () => {
+    let cancel = (tmp = buffer) => {
       buffer = []
+      let {machineBuffer} = status()
+      return {buffer:tmp, machineBuffer}
     }
 
     let status = () => {
@@ -324,9 +326,9 @@ let main = (
     clearTimeout(retry)
     port.cose(res)
   })
-    */
+  */
 
-    connect(ttyPath)
+  connect(ttyPath)
 
   let gerbil = {
     /**
@@ -400,7 +402,7 @@ let main = (
        * ```
        * @func
        *
-      */
+       */
       machineStatus,
     },
     /**
@@ -467,7 +469,7 @@ let main = (
      * }
      * ```
      * @func
-    */
+     */
     driverStatus : () => ({status})
   }
 
