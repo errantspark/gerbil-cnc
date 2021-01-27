@@ -5,7 +5,7 @@ import errors from './errors.js'
 const emptyPromise = () => {
   let res
   let promise = new Promise(_res => (res = _res))
-  promise.resolve = (...args) => (res(args), promise.done = true)
+  promise.resolve = (...args) => (res(...args), promise.done = true)
   return promise
 }
 
@@ -29,10 +29,10 @@ const emptyPromise = () => {
 let main = (
   ttyPath, 
   {autoReconnect} = {
-    autoReconnect: 1000
+    autoReconnect: 1000,
+    pollInterval: 200,
   } 
 ) => {
-
   let retry, port, parser, busy
 
   let status = {
@@ -49,49 +49,47 @@ let main = (
     port.write(data)
   }
 
-  let machineStatus = () => new Promise (res => {
-    let parseStatus = line => 
-      res(
-        Object.fromEntries(
-          line.trim()
-          .slice(1,-1) //remove surrounding <>
-          .split('|')
-          .map((s,i) => {
-            if (i === 0) return ['Status', s]
-            let [key, value = true] = s.split(':')
-            let values = value?.split?.(',').map(n => parseFloat(n)) || true
-            if (values?.length === 1) values = value
-            if (key === 'Bf') {
-              key = 'Buffer'
-              let [planner, rx] = values
-              values = {
-                planner,
-                rx
-              }
-            }
-            if (key === 'FS') {
-              key = 'Speeds'
-              let [feed, spindle] = values
-              values = {
-                feed,
-                spindle
-              }
-            }
-            if (key === 'F') {
-              key = 'Speeds'
-              let [feed] = values
-              values = {feed}
-            }
-            if (key === 'MPos' || key === 'WPos') {
-              let [x,y,z] = values
-              values = {x,y,z}
-            }
-            return [key, values]
-          }))
-      )
-    writeRaw('?')
-    router.next('status', parseStatus)
-  })
+  let machineStatus = (() => {
+    let parseStatus = line => Object.fromEntries(
+      line.trim()
+      .slice(1,-1) //remove surrounding <>
+      .split('|')
+      .map((s,i) => {
+        if (i === 0) return ['Status', s]
+        let [key, value = true] = s.split(':')
+        let values = value?.split?.(',').map(n => parseFloat(n)) || true
+        if (values?.length === 1) values = value
+        if (key === 'Bf') {
+          key = 'Buffer'
+          let [planner, rx] = values
+          values = {
+            planner,
+            rx
+          }
+        }
+        if (key === 'FS') {
+          key = 'Speeds'
+          let [feed, spindle] = values
+          values = {
+            feed,
+            spindle
+          }
+        }
+        if (key === 'F') {
+          key = 'Speeds'
+          let [feed] = values
+          values = {feed}
+        }
+        if (key === 'MPos' || key === 'WPos') {
+          let [x,y,z] = values
+          values = {x,y,z}
+        }
+        return [key, values]
+      }))
+    return () => new Promise (res => {
+        writeRaw('?')
+        router.next('status', response => (res(parseStatus(response))))
+    })})()
 
   let settings = _settings => new Promise (async res => {
     let {Status} = await gerbil.cmds.machineStatus()
@@ -129,6 +127,21 @@ let main = (
       router.every('ok',getOk)
     }
   })
+
+  let softReset = () => new Promise (res => {
+    writeRaw('\u0018')
+    router.next('any', res)
+  })
+
+  let feedHold = () => {
+    writeRaw('!')
+    return machineStatus()
+  }
+
+  let resume = () => {
+    writeRaw('~')
+    return machineStatus()
+  }
 
   let writeLine = message => new Promise (res => {
     if (message.split('\n').filter(a=>a).length > 1) 
@@ -404,6 +417,9 @@ let main = (
        *
        */
       machineStatus,
+      softReset,
+      feedHold,
+      resume,
     },
     /**
      * Set callback to execute on every line received from the serialport.
