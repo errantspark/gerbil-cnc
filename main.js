@@ -44,10 +44,12 @@ let main = (
     if (gerbil.machineReady.done) gerbil.machineReady = emptyPromise()
   }
 
-  let writeRaw = data => {
+  let writeRaw = data => new Promise(res => {
+    //console.log(`writeraw: "${data}"`)
     if (!(status.connected && status.version)) throw new Error('machine disconnected')
     port.write(data)
-  }
+    router.next('any', res)
+  })
 
   let machineStatus = (() => {
     let parseStatus = line => Object.fromEntries(
@@ -198,15 +200,23 @@ let main = (
       }
     }
 
-    let write = async string => {
+    let write = string => new Promise(res => {
+      setTimeout(res, 10000)
       if (!streaming) {
         streaming = true
-        router.every('ok', onData)
+        let unbinddata = router.next('data', datum => {
+          console.log(datum)
+          res(datum)
+        })
+        router.every('ok', (a,b) => {
+          unbinddata()
+          onData(a,b)
+        })
       }
       let commands = string.split('\n').map(s => s.trim()).filter(a=>a).map(a=>a+'\n')
       commands.forEach(command => buffer.push(command))
       processBuffer()
-    }
+    })
 
     let cancel = (tmp = buffer) => {
       buffer = []
@@ -252,6 +262,7 @@ let main = (
       version: new Set(),
       ok: new Set(),
       status: new Set(),
+      data: new Set(),
       setting: new Set(),
       error: new Set(),
       response: new Set(),
@@ -261,6 +272,7 @@ let main = (
       if (line.length === 0) return 'empty'
       if (line === 'ok') return 'ok'
       if (line[0] === '<') return 'status'
+      if (line[0] === '[') return 'data'
       if (line.match('Grbl')) return 'version'
       if (line.match(/^\$\d+=/)) return 'setting'
       if (errors[line]) return 'error'

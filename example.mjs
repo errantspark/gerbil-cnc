@@ -18,7 +18,7 @@ gerbil.machineReady.then(() => gerbil.writeLine('$I')).then(v => console.log('in
 
 ;(async () => {
   let ready = await gerbil.machineReady
-  
+
   let testVersion = _=>ready.version=== '1.1h'?'version correct':{error:'incorrect ver'}
 
   //read and set settings
@@ -54,7 +54,7 @@ gerbil.machineReady.then(() => gerbil.writeLine('$I')).then(v => console.log('in
     }
 
   }
-  
+
   let testCorkUncork = async () => {
     setTimeout(() => {
       console.log('COKRK!')
@@ -66,42 +66,59 @@ gerbil.machineReady.then(() => gerbil.writeLine('$I')).then(v => console.log('in
     },36000)
   }
 
+  let testFeedHold = async () => {
+    let msg
+    gerbil.onEveryLine = l => console.log('> ',l)
+    await gerbil.writeLine('G1 Z10 F1000\n')
+    /*
+    gerbil.writeRaw('!?')
+    await new Promise(r => setTimeout(r, 250))
+    gerbil.writeRaw('~?')
+    */
+    msg = await gerbil.cmds.feedHold()
+    await new Promise(r => setTimeout(r, 15))
+    console.log('1',msg)
+    msg = await gerbil.cmds.resume()
+    console.log('2',msg)
+    msg = await gerbil.cmds.resume()
+    console.log('3',msg)
+    msg = await gerbil.cmds.resume()
+    console.log('4',msg)
+    msg = await gerbil.cmds.machineStatus()
+    console.log('5',msg)
+    return true
+  }
 
-  //let set = await gerbil.cmds.settings().catch(console.log)
-  /*
-  let gettings = gerbil.cmds.settings(test)
-  gerbil.cmds.machineStatus().then(console.log)
-  await gettings
-  console.log('gettings')
-  console.log(set)
-  await new Promise(res => setTimeout(res,1))
-  console.log('writing line')
-  await new Promise(res => setTimeout(res,1))
-  gerbil.writeLine('g1 z10 f1000')
-  await new Promise(res => setTimeout(res,1))
-  gerbil.cmds.machineStatus().then(i => console.log('chin',i))
-  await new Promise(res => setTimeout(res,1))
-  console.log('feedholding')
-  await new Promise(res => setTimeout(res,1))
-  gerbil.cmds.feedHold().then(r => console.log('hld',r))
-  await new Promise(res => setTimeout(res,1))
-  gerbil.cmds.machineStatus().then(i => console.log('innerstatus',i))
-//setTimeout(() => gerbil.cmds.machineStatus().then(console.log), 100)
-  setTimeout(() => gerbil.cmds.resume().then(r =>console.log('rsm',r)), 1000)
-  setTimeout(() => gerbil.cmds.softReset().then(r =>console.log('rst',r)), 1100)
-  setTimeout(() => gerbil.cmds.machineStatus().then(console.log), 1300)
-  */
-let tests = {testSettings,testVersion}
 
-await Promise.all(
-  Object.entries(tests).map(async ([key,value])=>{
-    let outcome = await tests[key]()
-    let log = outcome.error?
-      `FAILURE\n${outcome.error}\n${JSON.stringify(outcome.data,null,2)}`:
-      `SUCCESS\n${outcome}`
-    return `${key}\n${log}`
-  })
-).then(array => array.map(v=>console.log(v+'\n')))
+  let testG4Behavior = async () => {
+    gerbil.onEveryLine = l => console.log('> ',l)
+    let testUpDown = new Array(5).fill('G1 Z10 F1000\nG1 Z0 F2000\n').join('')
+    testUpDown = testUpDown+'g4 p1'+testUpDown
+    gerbil.stream.write(testUpDown)
+    setInterval(() => {
+      gerbil.cmds.machineStatus().then(ms => console.log(ms,gerbil.stream.status()))}, 500)
+    //the planner buffer will empty when it gets to the G4, howev
+    return true
+  }
+
+  let testJogging = async () => {
+    let output = await gerbil.writeLine('$J=x10 y10 f100\n')
+    console.log(output)
+    return output==='ok'?'output ok':{error:output}
+  }
+
+  let tests = {testSettings,testVersion}
+  tests = {testFeedHold}
+
+  await Promise.all(
+    Object.entries(tests).map(async ([key,value])=>{
+      let outcome = await tests[key]()
+      let log = outcome.error?
+        `FAILURE\n${outcome.error}\n${JSON.stringify(outcome.data,null,2)}`:
+        `SUCCESS\n${outcome}`
+      return `${key}\n${log}`
+    })
+  ).then(array => array.map(v=>console.log(v+'\n')))
 
   gerbil.onEveryLine = l => console.log('> ',l)
 })()
